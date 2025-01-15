@@ -1,0 +1,49 @@
+package com.example.bitcointracker.controller;
+
+import com.example.bitcointracker.service.BitcoinPriceService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.json.JSONObject;
+
+@RestController
+public class BitcoinPriceController {
+
+    @Autowired
+    private BitcoinPriceService bitcoinPriceService;
+
+    @GetMapping("/api/bitcoin-price")
+    public ResponseEntity<JSONObject> getBitcoinPrices(@RequestParam String startDate, 
+                                                      @RequestParam String endDate, 
+                                                      @RequestParam(defaultValue = "USD") String currency, @RequestParam(defaultValue = "false") boolean offline) {
+        JSONObject prices = bitcoinPriceService.getPrices(startDate, endDate, currency);
+        
+        // Get the highest and lowest prices
+       if (offline) {
+        // Fetch offline data (predefined or mocked data)
+        response = getOfflineData(startDate, endDate, currency);
+    } else {
+        // Fetch live data from the CoinDesk API
+        JSONObject prices = bitcoinPriceService.getPrices(startDate, endDate, currency);
+        
+        var highest = bitcoinPriceService.getHighestPrice(prices);
+        var lowest = bitcoinPriceService.getLowestPrice(prices);
+
+        response = new JSONObject();
+        response.put("highestPrice", highest.getValue());
+        response.put("lowestPrice", lowest.getValue());
+        response.put("currency", currency);
+    }
+    
+    // HATEOAS link
+    Link selfLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(BitcoinPriceController.class)
+            .getBitcoinPrices(startDate, endDate, currency, offline)).withSelfRel();
+    response.put("self", selfLink.getHref());
+
+    return ResponseEntity.ok(response);
+}
+}
