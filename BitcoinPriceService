@@ -1,0 +1,33 @@
+package com.example.bitcointracker.service;
+
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.json.JSONObject;
+
+@Service
+public class BitcoinPriceService {
+
+    @Autowired
+    private CoinDeskApiService coinDeskApiService;
+
+    public JSONObject getPrices(String startDate, String endDate, String currency) {
+        String response = coinDeskApiService.getHistoricalData(startDate, endDate, currency);
+        JSONObject jsonResponse = new JSONObject();
+        return jsonResponse.getJSONObject("bpi");
+    }
+
+    public Map.Entry<String, Double> getHighestPrice(JSONObject prices) throws Throwable {
+        return (Entry<String, Double>) prices.toMap().entrySet()
+            .stream()
+            .max(Map.Entry.comparingByValue())
+            .orElseThrow(() -> new RuntimeException("No prices available"));
+    }
+
+    public Map.Entry<String, Double> getLowestPrice(JSONObject prices) throws Throwable {
+        return (Entry<String, Double>) prices.toMap().entrySet()
+            .stream()
+            .min(Map.Entry.comparingByValue())
+            .orElseThrow(() -> new RuntimeException("No prices available"));
+    }
+}
