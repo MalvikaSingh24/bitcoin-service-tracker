@@ -1,0 +1,16 @@
+package com.example.bitcointracker.service;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class CoinDeskApiService {
+    
+    private final String url = "https://api.coindesk.com/v1/bpi/historical/close.json";
+
+    public String getHistoricalData(String startDate, String endDate, String currency) {
+        RestTemplate restTemplate = new RestTemplate();
+        String endpoint = String.format("%s?start=%s&end=%s&currency=%s", url, startDate, endDate, currency);
+        return restTemplate.getForObject(endpoint, String.class);
+    }
+}
